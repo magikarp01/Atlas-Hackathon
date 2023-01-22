@@ -117,6 +117,28 @@ class ModularNN(BasicNN):
             # now, return new forward outputs
             return Z1, A1, Z2, A2
 
+        # get gradients of each weight/bias array
+        def backward_prop(self, X, Y):
+            # m is number of datapoints
+            m = X.shape[0]
+            Z1, A1, Z2, A2 = self.forward_prop(X)
+            one_hot_Y = one_hot(Y)
+            dZ2 = A2 - one_hot_Y
+            dW2 = 1 / m * dZ2.dot(A1.T)
+            db2 = 1 / m * np.sum(dZ2)
+            dZ1 = self.W2.T.dot(dZ2) * ReLU_deriv(Z1)
+            dW1 = 1 / m * dZ1.dot(X.T)
+            db1 = 1 / m * np.sum(dZ1)
+            return dW1, db1, dW2, db2
+        
+        # train on data
+        def train_data(self, alpha, X, Y):
+            dW1, db1, dW2, db2 = self.backward_prop(X, Y)
+            self.W1 = self.W1 - alpha * dW1
+            self.b1 = self.b1 - alpha * db1
+            self.W2 = self.W2 - alpha * dW2
+            self.b2 = self.b2 - alpha * db2
+
 
     def make_new_head(self, selected_neurons, num_neurons_l1, num_neurons_l2, ):
         # initialize a new head and add it to the heads list
